@@ -7,12 +7,12 @@ cnx = mysql.connector.connect(user='cs', database='test')
 cursor = cnx.cursor()
 
 # Queries
-queryDays = "select date_format(date,'%a, %e %b %y') from taprecords group by date;"
+queryDays = "select date_format(date,'%a, %e %b') from taprecords group by date;"
 querySearch = "SELECT classNum, surname, firstName, middleName, sex \
               FROM students20 where section='{}';"    #format with 'section'
 queryBatchAttendance = "select * from students20 left join taprecords on taprecords.studentId=students20.id " \
                        "group by id, date order by id;"
-querySectionAttendance = "select classNum, date_format(date,'%a, %e %b %y'), time from taprecords " \
+querySectionAttendance = "select classNum, date_format(date,'%a, %e %b'), time_format(time, '%H:%i %p') from taprecords " \
                          "inner join students20 on students20.id=taprecords.studentId where students20.section='{}' group by taprecords.date,students20.id;" #Format with section
 
 # Turns numbers to letters for excel column(eg. 1->A, 26->Z, 27->AA, 708->AAB)
@@ -28,16 +28,15 @@ def deciToLetters(deci):
 # Create Excel sheet per section
 def createExcelAttendance(section):
     workbook = xlsxwriter.Workbook(section+'_ARFID_Records_'+datetime.datetime.today().strftime('%b%e,%Y')+'.xlsx')
-    worksheet = workbook.add_worksheet()
+    worksheet = workbook.add_worksheet(section + ' Attendance')
 
-    header = workbook.add_format({'bold': True, 'align':'center'})
-    green = workbook.add_format({'fg_color':'#ddffc6'})
-    red = workbook.add_format({'fg_color':'#ffccc6'})
-    gray = workbook.add_format({'fg_color':'#afafaf'})
+    header = workbook.add_format({'bold': True, 'align':'center', 'bottom':6})
+    green = workbook.add_format({'bg_color':'#ddffc6', 'bottom':3})
+    red = workbook.add_format({'bg_color':'#ffccc6', 'bottom':3})
+    gray = workbook.add_format({'bg_color':'#cfcfcf', 'bottom':3})
+    timeCell = workbook.add_format({'num_format':0x12, 'bottom':3})
+    default = workbook.add_format({'bottom':3})
 
-    worksheet.set_column(1,3,12)
-    worksheet.set_column(2,2,20)
-    worksheet.set_column(4,4,5)
 
     # Add headers
     labels = ["CN", "Surname", "First Name", "Middle Name", "Sex"]
@@ -64,30 +63,41 @@ def createExcelAttendance(section):
         info = [classNum, surname, firstName, middleName, sex]
         j = 0
         for i in info:
-            worksheet.write(row, j, i)
+            worksheet.write(row, j, i, default)
             j += 1
 
         # Blank info will stay blank instead of 'nan'
         while 'nan' in info:
             loc = info.index('nan')
-            worksheet.write(row, loc, None)
+            worksheet.write(row, loc, None, default)
             info[loc] = None
         row += 1
+
+    # Variables about header info
+    numLabels = len(labels)
+    numDays = len(days)
 
     # List attendance per student
     cursor.execute(querySectionAttendance.format(section))
 
     for (classNum, date, time) in cursor:
-        col = days.index(date) + len(labels) + 1
-        worksheet.write(deciToLetters(col)+str(classNum+1), time)
+        col = len(labels) + days.index(date)
+        worksheet.write_datetime(classNum, col, datetime.datetime.strptime(time,"%H:%M %p"), timeCell)
 
-    worksheet.conditional_format('F2:'+deciToLetters(len(days)+6)+str(row),{'type':'cell','criteria':'>=','value':0.5,'format':red})
-    worksheet.conditional_format('F2:'+deciToLetters(len(days)+6)+str(row),{'type':'cell','criteria':'<','value':0.5,'format':green})
-    worksheet.conditional_format('F2:'+deciToLetters(len(days)+6)+str(row),{'type':'cell','criteria':'==','value':"",'format':green})
+    # Color code late, absent, and present
+    timeLate = datetime.datetime.strptime("10:15", "%H:%M")
+    worksheet.conditional_format(deciToLetters(numLabels+1)+'2:'+deciToLetters(numDays+numLabels)+str(row),{'type':'blanks','format':gray})
+    worksheet.conditional_format(deciToLetters(numLabels+1)+'2:'+deciToLetters(numDays+numLabels)+str(row),{'type':'time','criteria':'>=','value':timeLate,'format':red})
+    worksheet.conditional_format(deciToLetters(numLabels+1)+'2:'+deciToLetters(numDays+numLabels)+str(row),{'type':'time','criteria':'<','value':timeLate,'format':green})
+
+    worksheet.set_column(0,0,3)     #CN
+    worksheet.set_column(1,3,12)    #Last and Middle Names
+    worksheet.set_column(2,2,20)    #First Names
+    worksheet.set_column(4,4,5)     #Sex
+    worksheet.set_column(numLabels, numLabels+numDays,10)   #Attendance
 
     workbook.close()
     print(workbook.filename, "created.")
-
 
 if __name__ == "__main__":
     sections = ['Hernandez','Banzon','Sycip']
