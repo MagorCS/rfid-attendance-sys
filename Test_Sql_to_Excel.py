@@ -84,8 +84,26 @@ def createExcelAttendance(section):
         col = len(labels) + days.index(date)
         worksheet.write_datetime(classNum, col, datetime.datetime.strptime(time,"%H:%M %p"), timeCell)
 
+    rawTimeLate = "10:15"   # %H:%M
+    timeLate = datetime.datetime.strptime(rawTimeLate, "%H:%M")
+
+    # Total on time, late, absent per student #Header
+
+    tallyLabels = ["On Time", "Lates", "Absences", "Total"]
+    tallyColumn = numLabels + numDays
+    for tallyLabel in tallyLabels:
+        worksheet.write(0, tallyColumn, tallyLabel, header)
+        tallyColumn += 1
+
+    # Tally records
+    tallyColumn = numLabels + numDays
+    for k in range(1,row):
+            worksheet.write_formula(k, tallyColumn, "=COUNTIF({}{}:{}{},\"<{}\")".format(deciToLetters(numLabels+1),k+1,deciToLetters(numLabels+numDays),k+1,rawTimeLate),default)
+            worksheet.write_formula(k, tallyColumn+1, "=COUNTIF({}{}:{}{},\">={}\")".format(deciToLetters(numLabels+1),k+1,deciToLetters(numLabels+numDays),k+1,rawTimeLate),default)
+            worksheet.write_formula(k, tallyColumn+2, "=COUNTBLANK({}{}:{}{})".format(deciToLetters(numLabels+1),k+1,deciToLetters(numLabels+numDays),k+1),default)
+            worksheet.write_formula(k, tallyColumn+3, "=SUM({}{}:{}{})".format(deciToLetters(tallyColumn+1),k+1,deciToLetters(tallyColumn+3),k+1),default)
+
     # Color code late, absent, and present
-    timeLate = datetime.datetime.strptime("10:15", "%H:%M")
     worksheet.conditional_format(deciToLetters(numLabels+1)+'2:'+deciToLetters(numDays+numLabels)+str(row),{'type':'blanks','format':gray})
     worksheet.conditional_format(deciToLetters(numLabels+1)+'2:'+deciToLetters(numDays+numLabels)+str(row),{'type':'time','criteria':'>=','value':timeLate,'format':red})
     worksheet.conditional_format(deciToLetters(numLabels+1)+'2:'+deciToLetters(numDays+numLabels)+str(row),{'type':'time','criteria':'<','value':timeLate,'format':green})
@@ -94,7 +112,8 @@ def createExcelAttendance(section):
     worksheet.set_column(1,3,12)    #Last and Middle Names
     worksheet.set_column(2,2,20)    #First Names
     worksheet.set_column(4,4,5)     #Sex
-    worksheet.set_column(numLabels, numLabels+numDays,10)   #Attendance
+    worksheet.set_column(numLabels, numLabels+numDays,9)   #Attendance
+    worksheet.set_column(tallyColumn,tallyColumn+4,7)     #Tally
 
     workbook.close()
     print(workbook.filename, "created.")

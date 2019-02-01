@@ -32,7 +32,11 @@ def showRecords():
 
 def main():
     while(True):
-        recordTap(input("studentId: "),None)
+        try:
+            recordTap(input("studentId: "),None)
+        except Exception as e:
+            print(e)
+            break
         showRecords()
 
 if __name__ == "__main__":
