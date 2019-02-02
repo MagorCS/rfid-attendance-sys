@@ -25,7 +25,7 @@ Automated attendance system using radio-frequency identification.
 # Test Update rfid in Sql.py
   Used to set RFID Cards in MySql.
 
-# LATEST: Test Rfid, Sql, Tkinter.py
+# Test Rfid, Sql, Tkinter.py
   Scan arduino serial, search in database, display in tkinter.
   
 # Test_Record_Tap_in_Sql.py
