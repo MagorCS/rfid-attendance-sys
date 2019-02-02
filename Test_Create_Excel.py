@@ -5,7 +5,7 @@ cnx = mysql.connector.connect(user='cs', database='test')
 cursor = cnx.cursor()
 
 
-def deciToAnci(deci):
+def deciToLetters(deci):
     output = ""
     while (deci != 0):
         r = (deci -1) % 26
@@ -19,27 +19,13 @@ labels = ["Class Number", "Surname", "First Name", "Middle Name", "Sex"]
 names = ["Marew","JP","Bregg"]
 color = ["Pink", "red", "greg"]
 address = ["fish", "ham", "kwek"]
-
-
-workbook = xlsxwriter.Workbook('test.xlsx')
-worksheet = workbook.add_worksheet()
-
-bold = workbook.add_format({'bold': True})
-
-
-################### Class list (BATCH, split this to sections)
-i = 1
-for label in labels:
-    worksheet.write(deciToAnci(i)+"1", label, bold)
-    i += 1
-
-i = 1
-for something in [names, color, address]:
-    j = 2
-    for some in something:
-        worksheet.write(deciToAnci(i) + str(j), some)
-        j += 1
-    i += 1
+# i = 1
+# for something in [names, color, address]:
+#     j = 2
+#     for some in something:
+#         worksheet.write(deciToLetters(i) + str(j), some)
+#         j += 1
+#     i += 1
 
 
 querySearch = "SELECT classNum, surname, firstName, middleName, sex \
@@ -48,7 +34,6 @@ querySearch = "SELECT classNum, surname, firstName, middleName, sex \
 cursor.execute(querySearch)
 
 row = 2 #Numbers
-column = 1  #Letters
 for (classNum, surname, firstName, middleName, sex) in cursor:
     worksheet.write("A"+str(row), classNum)
     worksheet.write("B"+str(row), surname)
@@ -60,15 +45,26 @@ for (classNum, surname, firstName, middleName, sex) in cursor:
 
 ################## Set Dates as column
 
-queryDays = "select date from taprecords group by date;"
+queryDays = "select date_format(date,'%a, %e %b %y') from taprecords group by date;"
 
-
+days = []
+cursor.execute(queryDays)
+for date in cursor:
+    worksheet.write(deciToLetters(column) + "1", date[0], bold)
+    days.append(date[0])
+    column += 1
+print(days)
 
 ##################
 
 ################## Set attendance per student per day ((hekhek per section))
 
+queryBatchAttendance = "select classNum, date_format(date,'%a, %e %b %y') from students20 left join taprecords " \
+                       "on taprecords.studentId=students20.id group by id, date order by id where;"
 
+cursor.execute(queryBatchAttendance)
+for date in cursor:
+    print(day)
 
 ##################
 

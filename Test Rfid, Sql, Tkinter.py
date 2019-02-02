@@ -125,7 +125,7 @@ class DenyScreen(Frame):
         self.text = Label(self, text="Sorry that card is not registered.")
         self.text.config(bg="#aff")
         self.text.pack()
-        
+
 def checkDb(rfid):
     cursor.execute(query.format(rfid))
     for (classNum, surname, firstName, middleName, sex, section, gName, gNum, rfid) in cursor:
@@ -134,8 +134,8 @@ def checkDb(rfid):
         print("Section:", section)
         print("Class Number:", classNum)
         if(gName != "nan" and gNum != "nan"):
-            print("Contact",gName,"through",gNum)
-        return classNum, surname, firstName, middleName, sex, section, gName, gNum, rfid 
+            print("Contact",gName,"through", gNum)
+        return classNum, surname, firstName, middleName, sex, section, gName, gNum, rfid
     return False
 
 def main():
