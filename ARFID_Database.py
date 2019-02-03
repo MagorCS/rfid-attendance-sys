@@ -20,6 +20,7 @@ def setupQueries(studentDatabase, tapRecordDatabase):
         "searchSurname" : "select * from "+studentDatabase+" where surname='{}'", #Format with surname; returns list of people with the surname
         "updateRfid" : "update "+studentDatabase+" set rfid='{}' where id='{}'" #Format with rfid, id
     }
+    return queries
 
 # Setup database connection; resets if not; returns cursor
 def setupDbCon(user, database):
@@ -29,7 +30,7 @@ def setupDbCon(user, database):
         cnx = mysql.connector.connect(user=user, database=database)
         cursor = cnx.cursor()
         print("Connected to database {}, with user {}.".format(database,user))
-        return True
+        return cnx, cursor
     except Exception as e:
         print(e)
         print("Retrying in 5 seconds...")

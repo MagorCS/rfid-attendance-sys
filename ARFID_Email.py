@@ -40,7 +40,7 @@ def sendEmail(subject: str, text: str, to: list, bcc: list, files= None, usernam
         return False
 
 
-
+# Test if these functions work
 if __name__ == "__main__":
 
     sendEmail(
