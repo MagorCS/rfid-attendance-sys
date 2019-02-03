@@ -32,21 +32,17 @@ def checkIfOwned(rfid):
         for (id, classNum, surname, firstName, middleName, sex, section, gName, gNum, rfid) in cursor:
             print(id, classNum, surname, firstName, middleName, sex, section, gName, gNum, rfid)
         if(input("Do you want to register this to another row? [y/n] ")=='y'):
-            ask(rfid)
+            surname = input("Found card {}, what is the SURNAME of the new owner? [Enter surname] ".format(rfid))
+            checkDb(surname, rfid)
         else:
             print("Ended")
-    
 
-def ask(rfid):      #Asks for the Surname of the new owner of the RFID
-    surname = input("Found card {}, what is the SURNAME of the new owner? [Enter surname] ".format(rfid))
-    checkDb(surname,rfid)
 
 def checkDb(surname, scannedRfid):      #Checks the database for the SURNAME and returns a list
     results = []
     cursor.execute(surnameQuery.format(surname))
     cursor.fetchall()
     rows = cursor.rowcount
-    
     print("\n{} found.".format(rows))
     if(rows != 0 ):
         cursor.execute(surnameQuery.format(surname))
